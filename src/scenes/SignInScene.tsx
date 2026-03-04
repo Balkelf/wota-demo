@@ -1,14 +1,11 @@
 import React from 'react';
 import {AbsoluteFill, useCurrentFrame, interpolate} from 'remotion';
-import {Mail, Lock, ArrowRight, Droplets, User} from 'lucide-react';
+import {Mail, Lock, ArrowRight, Droplet} from 'lucide-react';
 
 // WCAG AAA compliant colors
 const colors = {
-  primary: '#0077B6',
-  secondary: '#0096C7',
-  accent: '#00B4D8',
-  warning: '#B45309',
-  success: '#047857',
+  primary: '#0A2540',
+  primaryLight: '#0066CC',
   background: '#F8FAFC',
   card: '#FFFFFF',
   text: '#0F172A',
@@ -16,7 +13,7 @@ const colors = {
   border: '#E2E8F0',
 };
 
-// Premium easing
+// Premium easing function
 const easeOutPremium = (t: number) => 1 - Math.pow(1 - t, 4);
 
 const smoothInterpolate = (
@@ -24,301 +21,217 @@ const smoothInterpolate = (
   inputRange: number[],
   outputRange: number[]
 ) => {
-  const progress = interpolate(frame, inputRange, [0, 1]);
+  const progress = interpolate(frame, inputRange, [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  });
   return interpolate(easeOutPremium(progress), [0, 1], outputRange);
 };
 
 export const SignInScene: React.FC = () => {
   const frame = useCurrentFrame();
 
-  // Card entrance
+  // Scene timing (0-240 frames = 0-8 seconds)
+  // Phase 1: Form appears (0-30)
   const cardOpacity = smoothInterpolate(frame, [0, 20], [0, 1]);
-  const cardY = smoothInterpolate(frame, [0, 25], [30, 0]);
+  const cardY = smoothInterpolate(frame, [0, 30], [30, 0]);
 
-  // Logo scale
-  const logoScale = smoothInterpolate(frame, [0, 25], [0.8, 1]);
-
-  // Title fade
-  const titleOpacity = smoothInterpolate(frame, [10, 30], [0, 1]);
-  const titleY = smoothInterpolate(frame, [10, 30], [15, 0]);
-
-  // Email field
-  const emailOpacity = smoothInterpolate(frame, [25, 40], [0, 1]);
-  const emailX = smoothInterpolate(frame, [25, 40], [-20, 0]);
-
-  // Password field
-  const passwordOpacity = smoothInterpolate(frame, [35, 50], [0, 1]);
-  const passwordX = smoothInterpolate(frame, [35, 50], [-20, 0]);
-
-  // Button
-  const buttonOpacity = smoothInterpolate(frame, [45, 60], [0, 1]);
-  const buttonScale = smoothInterpolate(frame, [45, 60], [0.95, 1]);
-
-  // Typing animation for email
+  // Phase 2: Type email (30-90)
   const emailText = "you@example.com";
-  const emailChars = Math.min(Math.floor((frame - 45) / 3), emailText.length);
-  const showEmailTyping = frame >= 45 && frame < 75;
-  const displayEmail = showEmailTyping ? emailText.slice(0, emailChars) : (frame >= 75 ? emailText : "");
+  const emailChars = Math.min(Math.floor((frame - 30) / 4), emailText.length);
+  const showEmailTyping = frame >= 30 && frame < 90;
+  const displayEmail = showEmailTyping ? emailText.slice(0, emailChars) : (frame >= 90 ? emailText : "");
 
-  // Password dots
-  const passwordDots = frame >= 75 ? 12 : Math.floor((frame - 70) / 2);
-  const showPasswordTyping = frame >= 70;
+  // Phase 3: Pause (90-120)
+  // Phase 4: Type password (120-180)
+  const passwordDots = frame >= 180 ? 12 : Math.max(0, Math.floor((frame - 120) / 5));
+  const showPasswordTyping = frame >= 120 && frame < 180;
 
-  // Button glow pulse
-  const glowPulse = 0.3 + Math.sin(frame * 0.08) * 0.1;
-
-  // Forgot password link
-  const forgotOpacity = smoothInterpolate(frame, [55, 70], [0, 1]);
-
-  // Sign up link
-  const signupOpacity = smoothInterpolate(frame, [65, 80], [0, 1]);
+  // Phase 5: Pause (180-210)
+  // Phase 6: Click sign in (210-240)
+  const buttonPressed = frame >= 210;
+  const buttonScale = buttonPressed ? 0.98 : 1;
+  const transitionOpacity = smoothInterpolate(frame, [220, 240], [0, 1]);
 
   return (
     <AbsoluteFill
       style={{
         background: `linear-gradient(180deg, ${colors.background} 0%, #E0F2FE 100%)`,
         display: 'flex',
-        alignItems: 'center',
         justifyContent: 'center',
-        padding: 60,
+        alignItems: 'center',
+        padding: 50,
       }}
     >
-      {/* Decorative background elements */}
+      {/* Transition overlay */}
       <div
         style={{
           position: 'absolute',
-          top: -100,
-          right: -100,
-          width: 400,
-          height: 400,
-          borderRadius: '50%',
-          background: `radial-gradient(circle, ${colors.primary}08 0%, transparent 70%)`,
-        }}
-      />
-      <div
-        style={{
-          position: 'absolute',
-          bottom: -150,
-          left: -150,
-          width: 500,
-          height: 500,
-          borderRadius: '50%',
-          background: `radial-gradient(circle, ${colors.accent}08 0%, transparent 70%)`,
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: colors.background,
+          opacity: transitionOpacity,
+          zIndex: 100,
         }}
       />
 
-      {/* Sign in card */}
       <div
         style={{
-          background: colors.card,
-          borderRadius: 32,
-          padding: 50,
-          width: '100%',
-          maxWidth: 520,
-          boxShadow: `
-            0 25px 50px rgba(0,0,0,0.08),
-            0 0 0 1px rgba(0,0,0,0.02)
-          `,
+          width: 700,
           opacity: cardOpacity,
           transform: `translateY(${cardY}px)`,
         }}
       >
         {/* Logo */}
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            marginBottom: 36,
-            transform: `scale(${logoScale})`,
-          }}
-        >
+        <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 60}}>
           <div
             style={{
-              width: 72,
-              height: 72,
-              borderRadius: 22,
-              background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`,
+              width: 80,
+              height: 80,
+              borderRadius: 24,
+              background: `linear-gradient(135deg, ${colors.primaryLight}, #00B4D8)`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: `0 12px 30px rgba(0, 119, 182, 0.25)`,
+              boxShadow: '0 10px 30px rgba(0, 102, 204, 0.2)',
             }}
           >
-            <Droplets size={36} color="white" strokeWidth={1.5} />
+            <Droplet size={40} color="white" strokeWidth={2} />
           </div>
         </div>
 
         {/* Title */}
-        <div
+        <h1
           style={{
+            fontSize: 48,
+            fontWeight: 700,
+            color: colors.text,
             textAlign: 'center',
-            marginBottom: 36,
-            opacity: titleOpacity,
-            transform: `translateY(${titleY}px)`,
+            marginBottom: 16,
+            letterSpacing: '-1px',
           }}
         >
-          <div style={{fontSize: 32, fontWeight: 700, color: colors.text, marginBottom: 8}}>
-            Welcome back
-          </div>
-          <div style={{fontSize: 18, color: colors.textMuted}}>
-            Sign in to access your water reports
-          </div>
-        </div>
+          Welcome to Wota
+        </h1>
+        <p
+          style={{
+            fontSize: 24,
+            color: colors.textMuted,
+            textAlign: 'center',
+            marginBottom: 60,
+          }}
+        >
+          Check your water quality
+        </p>
 
-        {/* Email input */}
+        {/* Form card */}
         <div
           style={{
-            marginBottom: 20,
-            opacity: emailOpacity,
-            transform: `translateX(${emailX}px)`,
+            background: colors.card,
+            borderRadius: 24,
+            padding: 50,
+            boxShadow: '0 10px 40px rgba(0,0,0,0.06)',
           }}
         >
-          <label style={{display: 'block', fontSize: 15, fontWeight: 500, color: colors.text, marginBottom: 8}}>
-            Email
-          </label>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              background: colors.background,
-              border: `2px solid ${colors.border}`,
-              borderRadius: 14,
-              padding: '16px 18px',
-              transition: 'border-color 0.2s',
-            }}
-          >
-            <Mail size={20} color={colors.textMuted} style={{marginRight: 12}} />
+          {/* Email field */}
+          <div style={{marginBottom: 30}}>
+            <label style={{display: 'block', fontSize: 18, fontWeight: 600, color: colors.text, marginBottom: 12}}>
+              Email
+            </label>
             <div
               style={{
-                flex: 1,
-                fontSize: 18,
-                color: displayEmail ? colors.text : colors.textMuted,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 16,
+                padding: '20px 24px',
+                border: `2px solid ${frame >= 30 ? colors.primaryLight : colors.border}`,
+                borderRadius: 16,
+                background: '#FAFAFA',
               }}
             >
-              {displayEmail || 'you@example.com'}
-              {frame >= 45 && frame < 75 && frame % 6 < 3 && (
-                <span style={{
-                  display: 'inline-block',
-                  width: 2,
-                  height: 20,
-                  background: colors.primary,
-                  marginLeft: 2,
-                  verticalAlign: 'middle',
-                }} />
+              <Mail size={24} color={colors.textMuted} />
+              <span style={{fontSize: 22, color: displayEmail ? colors.text : '#9CA3AF', flex: 1}}>
+                {displayEmail || 'you@example.com'}
+              </span>
+              {showEmailTyping && (
+                <span
+                  style={{
+                    width: 2,
+                    height: 24,
+                    background: colors.primaryLight,
+                    opacity: Math.sin(frame * 0.2) > 0 ? 1 : 0,
+                  }}
+                />
               )}
             </div>
           </div>
-        </div>
 
-        {/* Password input */}
-        <div
-          style={{
-            marginBottom: 24,
-            opacity: passwordOpacity,
-            transform: `translateX(${passwordX}px)`,
-          }}
-        >
-          <label style={{display: 'block', fontSize: 15, fontWeight: 500, color: colors.text, marginBottom: 8}}>
-            Password
-          </label>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              background: colors.background,
-              border: `2px solid ${colors.border}`,
-              borderRadius: 14,
-              padding: '16px 18px',
-            }}
-          >
-            <Lock size={20} color={colors.textMuted} style={{marginRight: 12}} />
-            <div style={{flex: 1, fontSize: 18, color: colors.text, letterSpacing: 2}}>
-              {showPasswordTyping && '•'.repeat(Math.max(0, passwordDots))}
-              {!showPasswordTyping && (
-                <span style={{color: colors.textMuted}}>••••••••</span>
-              )}
-              {showPasswordTyping && frame % 6 < 3 && frame < 90 && (
-                <span style={{
-                  display: 'inline-block',
-                  width: 2,
-                  height: 20,
-                  background: colors.primary,
-                  marginLeft: 4,
-                  verticalAlign: 'middle',
-                }} />
+          {/* Password field */}
+          <div style={{marginBottom: 40}}>
+            <label style={{display: 'block', fontSize: 18, fontWeight: 600, color: colors.text, marginBottom: 12}}>
+              Password
+            </label>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 16,
+                padding: '20px 24px',
+                border: `2px solid ${frame >= 120 ? colors.primaryLight : colors.border}`,
+                borderRadius: 16,
+                background: '#FAFAFA',
+              }}
+            >
+              <Lock size={24} color={colors.textMuted} />
+              <span style={{fontSize: 22, color: colors.text, flex: 1, letterSpacing: 3}}>
+                {'•'.repeat(passwordDots)}
+              </span>
+              {showPasswordTyping && (
+                <span
+                  style={{
+                    width: 2,
+                    height: 24,
+                    background: colors.primaryLight,
+                    opacity: Math.sin(frame * 0.2) > 0 ? 1 : 0,
+                  }}
+                />
               )}
             </div>
           </div>
-        </div>
 
-        {/* Forgot password */}
-        <div
-          style={{
-            textAlign: 'right',
-            marginBottom: 28,
-            opacity: forgotOpacity,
-          }}
-        >
-          <span style={{fontSize: 15, color: colors.primary, fontWeight: 500}}>
-            Forgot password?
-          </span>
-        </div>
-
-        {/* Sign in button */}
-        <div
-          style={{
-            opacity: buttonOpacity,
-            transform: `scale(${buttonScale})`,
-          }}
-        >
-          <div
+          {/* Sign in button */}
+          <button
             style={{
-              background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`,
+              width: '100%',
+              padding: '24px',
+              background: `linear-gradient(135deg, ${colors.primaryLight}, #00B4D8)`,
+              border: 'none',
+              borderRadius: 16,
               color: 'white',
-              padding: '20px 36px',
-              borderRadius: 14,
-              fontSize: 18,
+              fontSize: 24,
               fontWeight: 600,
-              textAlign: 'center',
-              boxShadow: `0 10px 30px rgba(0, 119, 182, ${glowPulse})`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: 10,
+              gap: 12,
+              cursor: 'pointer',
+              transform: `scale(${buttonScale})`,
+              boxShadow: buttonPressed 
+                ? '0 5px 20px rgba(0, 102, 204, 0.4)'
+                : '0 10px 30px rgba(0, 102, 204, 0.2)',
             }}
           >
             Sign In
-            <ArrowRight size={20} />
-          </div>
-        </div>
-
-        {/* Divider */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            margin: '28px 0',
-            opacity: forgotOpacity,
-          }}
-        >
-          <div style={{flex: 1, height: 1, background: colors.border}} />
-          <span style={{padding: '0 16px', fontSize: 14, color: colors.textMuted}}>or</span>
-          <div style={{flex: 1, height: 1, background: colors.border}} />
+            <ArrowRight size={24} />
+          </button>
         </div>
 
         {/* Sign up link */}
-        <div
-          style={{
-            textAlign: 'center',
-            opacity: signupOpacity,
-          }}
-        >
-          <span style={{fontSize: 16, color: colors.textMuted}}>
-            Don't have an account?{' '}
-            <span style={{color: colors.primary, fontWeight: 600}}>Sign up</span>
-          </span>
-        </div>
+        <p style={{textAlign: 'center', marginTop: 30, fontSize: 18, color: colors.textMuted}}>
+          Don't have an account? <span style={{color: colors.primaryLight, fontWeight: 600}}>Sign up</span>
+        </p>
       </div>
     </AbsoluteFill>
   );

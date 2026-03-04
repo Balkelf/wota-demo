@@ -1,335 +1,243 @@
 import React from 'react';
-import {AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, random} from 'remotion';
-import {Droplets, MapPin, Check, ArrowRight, Mail, Lock} from 'lucide-react';
+import {AbsoluteFill, useCurrentFrame, interpolate} from 'remotion';
+import {Search, MapPin, Droplet, ChevronRight} from 'lucide-react';
 
-// Premium easing function: cubic-bezier(0.16, 1, 0.3, 1)
-// Approximated for Remotion: easeOutExpo-like smooth deceleration
-const easeOutPremium = (t: number) => 1 - Math.pow(1 - t, 4); // Close approximation to cubic-bezier(0.16, 1, 0.3, 1)
-
-// WCAG AAA compliant color palette (7:1 contrast ratio minimum)
 const colors = {
-  primary: '#0077B6',      // Deep blue - meets AAA on white
-  secondary: '#0096C7',    // Ocean blue
-  accent: '#00B4D8',       // Bright teal
-  warning: '#B45309',      // Amber dark - AAA compliant
-  success: '#047857',      // Emerald dark - AAA compliant
-  background: '#F0F9FF',
+  primary: '#0A2540',
+  primaryLight: '#0066CC',
+  background: '#F8FAFC',
   card: '#FFFFFF',
-  text: '#0F172A',         // Near black - AAA on all backgrounds
-  textMuted: '#475569',    // Darker gray - AAA on white
-  glass: 'rgba(255, 255, 255, 0.85)',
+  text: '#0F172A',
+  textMuted: '#475569',
+  border: '#E2E8F0',
 };
 
-// Particle system for ambient motion
-const WaterParticles: React.FC<{seed: number}> = ({seed}) => {
-  const frame = useCurrentFrame();
-  const particles = [];
-  
-  for (let i = 0; i < 12; i++) {
-    const startX = random(`x-${seed}-${i}`) * 1080;
-    const startY = random(`y-${seed}-${i}`) * 1920;
-    const size = random(`s-${seed}-${i}`) * 15 + 4;
-    const speed = random(`v-${seed}-${i}`) * 0.4 + 0.2;
-    const opacity = random(`o-${seed}-${i}`) * 0.2 + 0.08;
-    
-    const x = startX + Math.sin(frame * 0.015 * speed + i) * 40;
-    const y = (startY + frame * speed * 1.5) % 2200 - 200;
-    
-    particles.push(
-      <div
-        key={i}
-        style={{
-          position: 'absolute',
-          left: x,
-          top: y,
-          width: size,
-          height: size,
-          borderRadius: '50%',
-          background: `radial-gradient(circle, rgba(0, 119, 182, ${opacity}) 0%, transparent 70%)`,
-          filter: 'blur(2px)',
-        }}
-      />
-    );
-  }
-  
-  return <>{particles}</>;
-};
+const easeOutPremium = (t: number) => 1 - Math.pow(1 - t, 4);
 
-// Smooth interpolate wrapper with premium easing
 const smoothInterpolate = (
   frame: number,
   inputRange: number[],
-  outputRange: number[],
-  options?: {extrapolateRight?: string}
+  outputRange: number[]
 ) => {
-  const progress = interpolate(frame, inputRange, [0, 1], options);
-  return interpolate(easeOutPremium(progress), [0, 1], outputRange, options);
+  const progress = interpolate(frame, inputRange, [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  });
+  return interpolate(easeOutPremium(progress), [0, 1], outputRange);
 };
 
 export const LandingScene: React.FC = () => {
   const frame = useCurrentFrame();
-  const {fps, width, height} = useVideoConfig();
 
-  // Logo entrance with smooth easing
-  const logoScale = smoothInterpolate(frame, [0, 30], [0.8, 1]);
-  const logoOpacity = smoothInterpolate(frame, [0, 25], [0, 1]);
+  // Scene timing (240-480 frames = 8-16 seconds, relative 0-240)
+  const localFrame = frame - 240;
 
-  // Text reveal with stagger
-  const textOpacity = smoothInterpolate(frame, [20, 45], [0, 1]);
-  const textY = smoothInterpolate(frame, [20, 45], [30, 0]);
+  // Phase 1: Screen appears (0-30)
+  const contentOpacity = smoothInterpolate(localFrame, [0, 30], [0, 1]);
+  const contentY = smoothInterpolate(localFrame, [0, 30], [30, 0]);
 
-  // Input slide with smooth easing
-  const inputOpacity = smoothInterpolate(frame, [40, 70], [0, 1]);
-  const inputY = smoothInterpolate(frame, [40, 70], [40, 0]);
+  // Phase 2: Type postcode (30-90)
+  const postcodeText = "SW1A";
+  const postcodeChars = Math.min(Math.floor((localFrame - 30) / 15), postcodeText.length);
+  const showTyping = localFrame >= 30 && localFrame < 90;
+  const displayPostcode = showTyping ? postcodeText.slice(0, postcodeChars) : (localFrame >= 90 ? postcodeText : "");
 
-  // Trust signals stagger
-  const trustOpacity = smoothInterpolate(frame, [60, 85], [0, 1]);
+  // Phase 3: Dropdown appears (90-120)
+  const dropdownOpacity = smoothInterpolate(localFrame, [90, 110], [0, 1]);
+  const dropdownY = smoothInterpolate(localFrame, [90, 110], [-10, 0]);
+  const showDropdown = localFrame >= 90;
 
-  // Postcode input typing animation
-  const postcodeChars = "SW1A 1AA";
-  const typedChars = Math.min(Math.floor((frame - 45) / 4), postcodeChars.length);
-  const showPostcode = frame > 45;
-  const displayPostcode = postcodeChars.slice(0, typedChars);
+  // Phase 4: Select option (120-180)
+  const selectedIndex = localFrame >= 150 ? 0 : -1;
 
-  // Autocomplete dropdown
-  const showAutocomplete = frame > 70 && frame < 90;
-  const autocompleteOpacity = smoothInterpolate(frame, [70, 80], [0, 1]);
+  // Phase 5: Click search (180-240)
+  const buttonPressed = localFrame >= 200;
+  const buttonScale = buttonPressed ? 0.98 : 1;
+  const transitionOpacity = smoothInterpolate(localFrame, [220, 240], [0, 1]);
 
-  // Ripple animation
-  const ripple1Scale = interpolate(frame, [0, 90], [0, 3], {extrapolateRight: 'clamp'});
-  const ripple1Opacity = interpolate(frame, [0, 60, 90], [0.5, 0.2, 0], {extrapolateRight: 'clamp'});
+  const suggestions = [
+    { postcode: 'SW1A 1AA', area: 'Westminster, London' },
+    { postcode: 'SW1A 0AA', area: 'Buckingham Palace' },
+    { postcode: 'SW1A 2AA', area: ' Downing Street' },
+  ];
 
   return (
     <AbsoluteFill
       style={{
-        background: `linear-gradient(180deg, ${colors.primary} 0%, ${colors.secondary} 50%, ${colors.accent} 100%)`,
-        overflow: 'hidden',
+        background: `linear-gradient(180deg, ${colors.background} 0%, #E0F2FE 100%)`,
+        padding: 60,
       }}
     >
-      {/* Animated gradient overlay */}
+      {/* Transition overlay */}
       <div
         style={{
           position: 'absolute',
-          width: '200%',
-          height: '200%',
-          top: '-50%',
-          left: '-50%',
-          background: `radial-gradient(circle at ${50 + Math.sin(frame * 0.015) * 15}% ${50 + Math.cos(frame * 0.015) * 15}%, rgba(255,255,255,0.08) 0%, transparent 50%)`,
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: colors.background,
+          opacity: transitionOpacity,
+          zIndex: 100,
         }}
       />
 
-      {/* Water particles */}
-      <WaterParticles seed={1} />
-
-      {/* Ripple effects */}
+      {/* Header */}
       <div
         style={{
-          position: 'absolute',
-          top: '25%',
-          left: '50%',
-          width: 300,
-          height: 300,
-          marginLeft: -150,
-          marginTop: -150,
-          borderRadius: '50%',
-          border: `2px solid rgba(255,255,255,${ripple1Opacity})`,
-          transform: `scale(${ripple1Scale})`,
-        }}
-      />
-
-      {/* Content container */}
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          height: '100%',
-          padding: 60,
+          opacity: contentOpacity,
+          transform: `translateY(${contentY}px)`,
+          marginBottom: 60,
         }}
       >
-        {/* Logo with smooth entrance */}
-        <div
-          style={{
-            transform: `scale(${logoScale})`,
-            opacity: logoOpacity,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-          }}
-        >
-          {/* Droplet icon with premium styling */}
+        <div style={{display: 'flex', alignItems: 'center', gap: 20, marginBottom: 20}}>
           <div
             style={{
-              width: 160,
-              height: 160,
-              marginBottom: 24,
+              width: 60,
+              height: 60,
+              borderRadius: 18,
+              background: `linear-gradient(135deg, ${colors.primaryLight}, #00B4D8)`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              background: 'radial-gradient(circle at 30% 30%, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.1) 50%, transparent 70%)',
-              borderRadius: '50%',
-              boxShadow: `
-                0 20px 60px rgba(0,0,0,0.25),
-                inset 0 -20px 40px rgba(255,255,255,0.15),
-                inset 0 20px 40px rgba(255,255,255,0.25)
-              `,
             }}
           >
-            <Droplets 
-              size={80} 
-              color="white" 
-              strokeWidth={1.5}
-              style={{filter: 'drop-shadow(0 8px 16px rgba(0,0,0,0.2))'}}
-            />
+            <Droplet size={32} color="white" />
           </div>
+          <span style={{fontSize: 36, fontWeight: 700, color: colors.text}}>Wota</span>
+        </div>
+        <h1 style={{fontSize: 56, fontWeight: 700, color: colors.text, lineHeight: 1.2, marginBottom: 16}}>
+          Check your water quality
+        </h1>
+        <p style={{fontSize: 28, color: colors.textMuted}}>
+          Enter your postcode to see what's in your tap water
+        </p>
+      </div>
 
-          {/* App name with premium typography */}
+      {/* Search card */}
+      <div
+        style={{
+          background: colors.card,
+          borderRadius: 24,
+          padding: 40,
+          boxShadow: '0 10px 40px rgba(0,0,0,0.06)',
+          opacity: contentOpacity,
+        }}
+      >
+        {/* Search input */}
+        <div style={{marginBottom: 20}}>
+          <label style={{display: 'block', fontSize: 18, fontWeight: 600, color: colors.text, marginBottom: 12}}>
+            Your postcode
+          </label>
           <div
             style={{
-              fontSize: 96,
-              fontWeight: 700,
-              color: 'white',
-              letterSpacing: '-3px',
-              textShadow: '0 4px 24px rgba(0,0,0,0.25)',
-            }}
-          >
-            Wota
-          </div>
-        </div>
-
-        {/* Tagline with smooth reveal */}
-        <div
-          style={{
-            marginTop: 36,
-            fontSize: 40,
-            fontWeight: 500,
-            color: 'rgba(255,255,255,0.95)',
-            textAlign: 'center',
-            opacity: textOpacity,
-            transform: `translateY(${textY}px)`,
-            textShadow: '0 2px 8px rgba(0,0,0,0.15)',
-          }}
-        >
-          What's really in your tap water?
-        </div>
-
-        {/* Postcode input with glassmorphism */}
-        <div
-          style={{
-            marginTop: 70,
-            opacity: inputOpacity,
-            transform: `translateY(${inputY}px)`,
-          }}
-        >
-          <div
-            style={{
-              width: 680,
-              height: 90,
-              background: colors.glass,
-              backdropFilter: 'blur(24px)',
-              borderRadius: 28,
-              border: '1px solid rgba(255,255,255,0.35)',
               display: 'flex',
               alignItems: 'center',
-              padding: '0 32px',
-              boxShadow: `
-                0 12px 48px rgba(0,0,0,0.12),
-                inset 0 1px 0 rgba(255,255,255,0.45)
-              `,
+              gap: 16,
+              padding: '24px',
+              border: `2px solid ${localFrame >= 30 ? colors.primaryLight : colors.border}`,
+              borderRadius: 16,
+              background: '#FAFAFA',
             }}
           >
-            <MapPin size={28} color="rgba(255,255,255,0.7)" style={{marginRight: 16}} />
-            <div
-              style={{
-                fontSize: 32,
-                color: showPostcode && displayPostcode ? 'white' : 'rgba(255,255,255,0.6)',
-                flex: 1,
-                fontFamily: 'inherit',
-              }}
-            >
-              {showPostcode ? displayPostcode || 'Enter your postcode' : 'Enter your postcode'}
-            </div>
-            {/* Animated cursor */}
-            <div
-              style={{
-                width: 2,
-                height: 36,
-                backgroundColor: 'white',
-                opacity: Math.sin(frame * 0.12) > 0 ? 1 : 0,
-              }}
-            />
+            <MapPin size={28} color={colors.textMuted} />
+            <span style={{fontSize: 28, color: displayPostcode ? colors.text : '#9CA3AF', flex: 1}}>
+              {displayPostcode || 'Enter postcode'}
+            </span>
+            {showTyping && (
+              <span
+                style={{
+                  width: 2,
+                  height: 28,
+                  background: colors.primaryLight,
+                  opacity: Math.sin(localFrame * 0.2) > 0 ? 1 : 0,
+                }}
+              />
+            )}
           </div>
-
-          {/* Autocomplete dropdown */}
-          {showAutocomplete && (
-            <div
-              style={{
-                position: 'absolute',
-                top: '100%',
-                left: 0,
-                right: 0,
-                marginTop: 12,
-                background: 'rgba(255,255,255,0.95)',
-                backdropFilter: 'blur(24px)',
-                borderRadius: 20,
-                boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
-                overflow: 'hidden',
-                opacity: autocompleteOpacity,
-              }}
-            >
-              {['SW1A 1AA - Westminster', 'SW1A 0AA - Westminster', 'SW1A 2AA - Westminster'].map((suggestion, i) => (
-                <div
-                  key={i}
-                  style={{
-                    padding: '18px 28px',
-                    fontSize: 24,
-                    color: colors.text,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 12,
-                    background: i === 0 ? `${colors.primary}15` : 'transparent',
-                    borderBottom: i < 2 ? '1px solid rgba(0,0,0,0.05)' : 'none',
-                  }}
-                >
-                  <MapPin size={20} color={colors.primary} />
-                  {suggestion}
-                </div>
-              ))}
-            </div>
-          )}
         </div>
 
-        {/* Trust signals */}
-        <div
+        {/* Dropdown */}
+        {showDropdown && (
+          <div
+            style={{
+              background: colors.card,
+              border: `1px solid ${colors.border}`,
+              borderRadius: 16,
+              overflow: 'hidden',
+              marginBottom: 30,
+              opacity: dropdownOpacity,
+              transform: `translateY(${dropdownY}px)`,
+            }}
+          >
+            {suggestions.map((s, i) => (
+              <div
+                key={i}
+                style={{
+                  padding: '20px 24px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 16,
+                  background: selectedIndex === i ? '#F0F9FF' : 'transparent',
+                  borderBottom: i < suggestions.length - 1 ? `1px solid ${colors.border}` : 'none',
+                }}
+              >
+                <MapPin size={20} color={colors.primaryLight} />
+                <div>
+                  <div style={{fontSize: 22, fontWeight: 600, color: colors.text}}>{s.postcode}</div>
+                  <div style={{fontSize: 16, color: colors.textMuted}}>{s.area}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Search button */}
+        <button
           style={{
-            position: 'absolute',
-            bottom: 70,
+            width: '100%',
+            padding: '24px',
+            background: `linear-gradient(135deg, ${colors.primaryLight}, #00B4D8)`,
+            border: 'none',
+            borderRadius: 16,
+            color: 'white',
+            fontSize: 24,
+            fontWeight: 600,
             display: 'flex',
-            gap: 36,
-            opacity: trustOpacity,
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 12,
+            cursor: 'pointer',
+            transform: `scale(${buttonScale})`,
+            boxShadow: buttonPressed 
+              ? '0 5px 20px rgba(0, 102, 204, 0.4)'
+              : '0 10px 30px rgba(0, 102, 204, 0.2)',
           }}
         >
-          {[
-            'Based on official data',
-            'No signup required',
-            '100% independent'
-          ].map((text, i) => (
-            <div
-              key={i}
-              style={{
-                fontSize: 20,
-                color: 'rgba(255,255,255,0.85)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-              }}
-            >
-              <Check size={18} strokeWidth={2.5} />
-              {text}
-            </div>
-          ))}
-        </div>
+          <Search size={24} />
+          Check Water Quality
+        </button>
+      </div>
+
+      {/* Trust signals */}
+      <div
+        style={{
+          marginTop: 40,
+          display: 'flex',
+          gap: 40,
+          opacity: contentOpacity,
+        }}
+      >
+        {[
+          { icon: '✓', text: 'Official data' },
+          { icon: '✓', text: 'No signup required' },
+          { icon: '✓', text: '100% independent' },
+        ].map((item, i) => (
+          <div key={i} style={{display: 'flex', alignItems: 'center', gap: 10, fontSize: 18, color: colors.textMuted}}>
+            <span style={{color: '#0D7A3E', fontSize: 20}}>{item.icon}</span>
+            {item.text}
+          </div>
+        ))}
       </div>
     </AbsoluteFill>
   );
