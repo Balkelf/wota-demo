@@ -53,7 +53,6 @@ export const LandingScene: React.FC = () => {
   // Phase 5: Click search (180-240)
   const buttonPressed = localFrame >= 200;
   const buttonScale = buttonPressed ? 0.98 : 1;
-  const transitionOpacity = smoothInterpolate(localFrame, [220, 240], [0, 1]);
 
   const suggestions = [
     { postcode: 'SW1A 1AA', area: 'Westminster, London' },
@@ -68,20 +67,6 @@ export const LandingScene: React.FC = () => {
         padding: 60,
       }}
     >
-      {/* Transition overlay */}
-      <div
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: colors.background,
-          opacity: transitionOpacity,
-          zIndex: 100,
-        }}
-      />
-
       {/* Header */}
       <div
         style={{

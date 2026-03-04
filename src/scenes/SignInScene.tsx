@@ -51,7 +51,6 @@ export const SignInScene: React.FC = () => {
   // Phase 6: Click sign in (210-240)
   const buttonPressed = frame >= 210;
   const buttonScale = buttonPressed ? 0.98 : 1;
-  const transitionOpacity = smoothInterpolate(frame, [220, 240], [0, 1]);
 
   return (
     <AbsoluteFill
@@ -63,20 +62,6 @@ export const SignInScene: React.FC = () => {
         padding: 50,
       }}
     >
-      {/* Transition overlay */}
-      <div
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: colors.background,
-          opacity: transitionOpacity,
-          zIndex: 100,
-        }}
-      />
-
       <div
         style={{
           width: 700,

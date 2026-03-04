@@ -80,7 +80,6 @@ export const ResultsScene: React.FC = () => {
   // Phase 5: User reads (150-200)
   // Phase 6: Click recommendation (200-240)
   const cardPressed = localFrame >= 210;
-  const transitionOpacity = smoothInterpolate(localFrame, [220, 240], [0, 1]);
 
   const paramOpacities = [param1Opacity, param2Opacity, param3Opacity, param4Opacity];
 
@@ -91,20 +90,6 @@ export const ResultsScene: React.FC = () => {
         padding: 50,
       }}
     >
-      {/* Transition overlay */}
-      <div
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: colors.background,
-          opacity: transitionOpacity,
-          zIndex: 100,
-        }}
-      />
-
       {/* Header */}
       <div
         style={{
