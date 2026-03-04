@@ -1,6 +1,6 @@
 import React from 'react';
 import {AbsoluteFill, useCurrentFrame, interpolate} from 'remotion';
-import {Search, MapPin, Droplet, ChevronRight} from 'lucide-react';
+import {Search, MapPin, Droplet} from 'lucide-react';
 
 const colors = {
   primary: '#0A2540',
@@ -27,31 +27,28 @@ const smoothInterpolate = (
 };
 
 export const LandingScene: React.FC = () => {
-  const frame = useCurrentFrame();
-
-  // Scene timing (240-480 frames = 8-16 seconds, relative 0-240)
-  const localFrame = frame - 240;
+  const frame = useCurrentFrame(); // Already shifted by Sequence - starts at 0
 
   // Phase 1: Screen appears (0-30)
-  const contentOpacity = smoothInterpolate(localFrame, [0, 30], [0, 1]);
-  const contentY = smoothInterpolate(localFrame, [0, 30], [30, 0]);
+  const contentOpacity = smoothInterpolate(frame, [0, 30], [0, 1]);
+  const contentY = smoothInterpolate(frame, [0, 30], [30, 0]);
 
   // Phase 2: Type postcode (30-90)
   const postcodeText = "SW1A";
-  const postcodeChars = Math.min(Math.floor((localFrame - 30) / 15), postcodeText.length);
-  const showTyping = localFrame >= 30 && localFrame < 90;
-  const displayPostcode = showTyping ? postcodeText.slice(0, postcodeChars) : (localFrame >= 90 ? postcodeText : "");
+  const postcodeChars = Math.min(Math.floor((frame - 30) / 15), postcodeText.length);
+  const showTyping = frame >= 30 && frame < 90;
+  const displayPostcode = showTyping ? postcodeText.slice(0, postcodeChars) : (frame >= 90 ? postcodeText : "");
 
   // Phase 3: Dropdown appears (90-120)
-  const dropdownOpacity = smoothInterpolate(localFrame, [90, 110], [0, 1]);
-  const dropdownY = smoothInterpolate(localFrame, [90, 110], [-10, 0]);
-  const showDropdown = localFrame >= 90;
+  const dropdownOpacity = smoothInterpolate(frame, [90, 110], [0, 1]);
+  const dropdownY = smoothInterpolate(frame, [90, 110], [-10, 0]);
+  const showDropdown = frame >= 90;
 
   // Phase 4: Select option (120-180)
-  const selectedIndex = localFrame >= 150 ? 0 : -1;
+  const selectedIndex = frame >= 150 ? 0 : -1;
 
   // Phase 5: Click search (180-240)
-  const buttonPressed = localFrame >= 200;
+  const buttonPressed = frame >= 200;
   const buttonScale = buttonPressed ? 0.98 : 1;
 
   const suggestions = [
@@ -120,7 +117,7 @@ export const LandingScene: React.FC = () => {
               alignItems: 'center',
               gap: 16,
               padding: '24px',
-              border: `2px solid ${localFrame >= 30 ? colors.primaryLight : colors.border}`,
+              border: `2px solid ${frame >= 30 ? colors.primaryLight : colors.border}`,
               borderRadius: 16,
               background: '#FAFAFA',
             }}
@@ -135,7 +132,7 @@ export const LandingScene: React.FC = () => {
                   width: 2,
                   height: 28,
                   background: colors.primaryLight,
-                  opacity: Math.sin(localFrame * 0.2) > 0 ? 1 : 0,
+                  opacity: Math.sin(frame * 0.2) > 0 ? 1 : 0,
                 }}
               />
             )}

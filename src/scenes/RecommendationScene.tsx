@@ -27,32 +27,29 @@ const smoothInterpolate = (
   return interpolate(easeOutPremium(progress), [0, 1], outputRange);
 };
 
-export const RecommendationScene: React.FC = () => {
-  const frame = useCurrentFrame();
+const features = [
+  'Reduces hardness by 80%',
+  'Removes chlorine taste',
+  'BPA-free, easy to use',
+];
 
-  // Scene timing (720-900 frames = 24-30 seconds, relative 0-180)
-  const localFrame = frame - 720;
+export const RecommendationScene: React.FC = () => {
+  const frame = useCurrentFrame(); // Already shifted by Sequence - starts at 0
 
   // Phase 1: Product appears (0-30)
-  const cardOpacity = smoothInterpolate(localFrame, [0, 30], [0, 1]);
-  const cardScale = smoothInterpolate(localFrame, [0, 30], [0.95, 1]);
+  const cardOpacity = smoothInterpolate(frame, [0, 30], [0, 1]);
+  const cardScale = smoothInterpolate(frame, [0, 30], [0.95, 1]);
 
   // Phase 2: Image area (30-60)
-  const imageOpacity = smoothInterpolate(localFrame, [30, 60], [0, 1]);
+  const imageOpacity = smoothInterpolate(frame, [30, 60], [0, 1]);
 
   // Phase 3: Details appear (60-120)
-  const detailsOpacity = smoothInterpolate(localFrame, [60, 90], [0, 1]);
-  const featuresOpacity = smoothInterpolate(localFrame, [90, 120], [0, 1]);
+  const detailsOpacity = smoothInterpolate(frame, [60, 90], [0, 1]);
+  const featuresOpacity = smoothInterpolate(frame, [90, 120], [0, 1]);
 
   // Phase 4: CTA highlight (120-180)
-  const ctaOpacity = smoothInterpolate(localFrame, [120, 150], [0, 1]);
-  const ctaGlow = 0.8 + Math.sin(localFrame * 0.1) * 0.2;
-
-  const features = [
-    'Reduces hardness by 80%',
-    'Removes chlorine taste',
-    'BPA-free, easy to use',
-  ];
+  const ctaOpacity = smoothInterpolate(frame, [120, 150], [0, 1]);
+  const ctaGlow = 0.8 + Math.sin(frame * 0.1) * 0.2;
 
   return (
     <AbsoluteFill

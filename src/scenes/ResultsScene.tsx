@@ -29,7 +29,6 @@ const smoothInterpolate = (
   return interpolate(easeOutPremium(progress), [0, 1], outputRange);
 };
 
-// Real UK water quality data
 const waterData = [
   {
     name: 'Hardness',
@@ -62,24 +61,21 @@ const waterData = [
 ];
 
 export const ResultsScene: React.FC = () => {
-  const frame = useCurrentFrame();
-
-  // Scene timing (480-720 frames = 16-24 seconds, relative 0-240)
-  const localFrame = frame - 480;
+  const frame = useCurrentFrame(); // Already shifted by Sequence - starts at 0
 
   // Phase 1: Results appear (0-30)
-  const headerOpacity = smoothInterpolate(localFrame, [0, 30], [0, 1]);
-  const headerY = smoothInterpolate(localFrame, [0, 30], [-20, 0]);
+  const headerOpacity = smoothInterpolate(frame, [0, 30], [0, 1]);
+  const headerY = smoothInterpolate(frame, [0, 30], [-20, 0]);
 
   // Phase 2-4: Each parameter reveals (30-180, staggered)
-  const param1Opacity = smoothInterpolate(localFrame, [30, 60], [0, 1]);
-  const param2Opacity = smoothInterpolate(localFrame, [60, 90], [0, 1]);
-  const param3Opacity = smoothInterpolate(localFrame, [90, 120], [0, 1]);
-  const param4Opacity = smoothInterpolate(localFrame, [120, 150], [0, 1]);
+  const param1Opacity = smoothInterpolate(frame, [30, 60], [0, 1]);
+  const param2Opacity = smoothInterpolate(frame, [60, 90], [0, 1]);
+  const param3Opacity = smoothInterpolate(frame, [90, 120], [0, 1]);
+  const param4Opacity = smoothInterpolate(frame, [120, 150], [0, 1]);
 
   // Phase 5: User reads (150-200)
   // Phase 6: Click recommendation (200-240)
-  const cardPressed = localFrame >= 210;
+  const cardPressed = frame >= 210;
 
   const paramOpacities = [param1Opacity, param2Opacity, param3Opacity, param4Opacity];
 
