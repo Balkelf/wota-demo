@@ -1,0 +1,25 @@
+{
+  "name": "wota-demo",
+  "version": "1.0.0",
+  "description": "Wota app demo animation for X",
+  "scripts": {
+    "start": "remotion studio src/index.ts",
+    "build": "remotion render WotaDemo out/video.mp4",
+    "render": "remotion render WotaDemo out/video.mp4"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@remotion/cli": "^4.0.0",
+    "@remotion/player": "^4.0.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "remotion": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "typescript": "^5.0.0"
+  }
+}
