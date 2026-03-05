@@ -9,8 +9,8 @@ export const RemotionRoot: React.FC = () => {
         component={WotaDemo}
         durationInFrames={900}
         fps={30}
-        width={1080}
-        height={1920}
+        width={1200}
+        height={2400}
       />
     </>
   );

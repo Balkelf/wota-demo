@@ -2,7 +2,6 @@ import React from 'react';
 import {AbsoluteFill, useCurrentFrame, interpolate} from 'remotion';
 import {Mail, Lock, ArrowRight, Droplet} from 'lucide-react';
 
-// WCAG AAA compliant colors
 const colors = {
   primary: '#0A2540',
   primaryLight: '#0066CC',
@@ -13,7 +12,6 @@ const colors = {
   border: '#E2E8F0',
 };
 
-// Premium easing function
 const easeOutPremium = (t: number) => 1 - Math.pow(1 - t, 4);
 
 const smoothInterpolate = (
@@ -31,26 +29,26 @@ const smoothInterpolate = (
 export const SignInScene: React.FC = () => {
   const frame = useCurrentFrame();
 
-  // Scene timing (0-240 frames = 0-8 seconds)
   // Phase 1: Form appears (0-30)
   const cardOpacity = smoothInterpolate(frame, [0, 20], [0, 1]);
   const cardY = smoothInterpolate(frame, [0, 30], [30, 0]);
 
-  // Phase 2: Type email (30-90)
-  const emailText = "you@example.com";
-  const emailChars = Math.min(Math.floor((frame - 30) / 4), emailText.length);
+  // Phase 2: Type email (30-90) - REAL EMAIL
+  const emailText = "sarah.johnson@email.com";
+  const emailChars = Math.min(Math.floor((frame - 30) / 3), emailText.length);
   const showEmailTyping = frame >= 30 && frame < 90;
   const displayEmail = showEmailTyping ? emailText.slice(0, emailChars) : (frame >= 90 ? emailText : "");
 
-  // Phase 3: Pause (90-120)
-  // Phase 4: Type password (120-180)
-  const passwordDots = frame >= 180 ? 12 : Math.max(0, Math.floor((frame - 120) / 5));
+  // Phase 4: Type password (120-180) - 8 dots
+  const passwordDots = frame >= 180 ? 8 : Math.max(0, Math.floor((frame - 120) / 8));
   const showPasswordTyping = frame >= 120 && frame < 180;
 
-  // Phase 5: Pause (180-210)
   // Phase 6: Click sign in (210-240)
   const buttonPressed = frame >= 210;
-  const buttonScale = buttonPressed ? 0.98 : 1;
+  const buttonScale = buttonPressed ? 0.96 : 1;
+  const buttonShadow = buttonPressed 
+    ? '0 5px 15px rgba(0, 102, 204, 0.4)'
+    : '0 10px 30px rgba(0, 102, 204, 0.2)';
 
   return (
     <AbsoluteFill
@@ -59,7 +57,7 @@ export const SignInScene: React.FC = () => {
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 50,
+        padding: 60,
       }}
     >
       <div
@@ -134,11 +132,12 @@ export const SignInScene: React.FC = () => {
                 border: `2px solid ${frame >= 30 ? colors.primaryLight : colors.border}`,
                 borderRadius: 16,
                 background: '#FAFAFA',
+                transition: 'border-color 0.3s',
               }}
             >
               <Mail size={24} color={colors.textMuted} />
               <span style={{fontSize: 22, color: displayEmail ? colors.text : '#9CA3AF', flex: 1}}>
-                {displayEmail || 'you@example.com'}
+                {displayEmail || 'sarah.johnson@email.com'}
               </span>
               {showEmailTyping && (
                 <span
@@ -167,6 +166,7 @@ export const SignInScene: React.FC = () => {
                 border: `2px solid ${frame >= 120 ? colors.primaryLight : colors.border}`,
                 borderRadius: 16,
                 background: '#FAFAFA',
+                transition: 'border-color 0.3s',
               }}
             >
               <Lock size={24} color={colors.textMuted} />
@@ -203,9 +203,8 @@ export const SignInScene: React.FC = () => {
               gap: 12,
               cursor: 'pointer',
               transform: `scale(${buttonScale})`,
-              boxShadow: buttonPressed 
-                ? '0 5px 20px rgba(0, 102, 204, 0.4)'
-                : '0 10px 30px rgba(0, 102, 204, 0.2)',
+              boxShadow: buttonShadow,
+              transition: 'transform 0.15s, box-shadow 0.15s',
             }}
           >
             Sign In

@@ -1,6 +1,8 @@
 import React from 'react';
 import {AbsoluteFill, useCurrentFrame, interpolate} from 'remotion';
-import {Search, MapPin, Droplet} from 'lucide-react';
+import {Search, MapPin, Droplet, ChevronRight} from 'lucide-react';
+import {Breadcrumb} from '../components/Breadcrumb';
+import {BottomNav} from '../components/BottomNav';
 
 const colors = {
   primary: '#0A2540',
@@ -27,7 +29,7 @@ const smoothInterpolate = (
 };
 
 export const LandingScene: React.FC = () => {
-  const frame = useCurrentFrame(); // Already shifted by Sequence - starts at 0
+  const frame = useCurrentFrame();
 
   // Phase 1: Screen appears (0-30)
   const contentOpacity = smoothInterpolate(frame, [0, 30], [0, 1]);
@@ -49,12 +51,12 @@ export const LandingScene: React.FC = () => {
 
   // Phase 5: Click search (180-240)
   const buttonPressed = frame >= 200;
-  const buttonScale = buttonPressed ? 0.98 : 1;
+  const buttonScale = buttonPressed ? 0.96 : 1;
 
   const suggestions = [
     { postcode: 'SW1A 1AA', area: 'Westminster, London' },
     { postcode: 'SW1A 0AA', area: 'Buckingham Palace' },
-    { postcode: 'SW1A 2AA', area: ' Downing Street' },
+    { postcode: 'SW1A 2AA', area: '10 Downing Street' },
   ];
 
   return (
@@ -62,14 +64,18 @@ export const LandingScene: React.FC = () => {
       style={{
         background: `linear-gradient(180deg, ${colors.background} 0%, #E0F2FE 100%)`,
         padding: 60,
+        paddingBottom: 140, // Space for bottom nav
       }}
     >
+      {/* Breadcrumb */}
+      <Breadcrumb items={['Sign in', 'Postcode']} />
+
       {/* Header */}
       <div
         style={{
           opacity: contentOpacity,
           transform: `translateY(${contentY}px)`,
-          marginBottom: 60,
+          marginBottom: 50,
         }}
       >
         <div style={{display: 'flex', alignItems: 'center', gap: 20, marginBottom: 20}}>
@@ -88,10 +94,10 @@ export const LandingScene: React.FC = () => {
           </div>
           <span style={{fontSize: 36, fontWeight: 700, color: colors.text}}>Wota</span>
         </div>
-        <h1 style={{fontSize: 56, fontWeight: 700, color: colors.text, lineHeight: 1.2, marginBottom: 16}}>
+        <h1 style={{fontSize: 52, fontWeight: 700, color: colors.text, lineHeight: 1.2, marginBottom: 16}}>
           Check your water quality
         </h1>
-        <p style={{fontSize: 28, color: colors.textMuted}}>
+        <p style={{fontSize: 26, color: colors.textMuted}}>
           Enter your postcode to see what's in your tap water
         </p>
       </div>
@@ -192,7 +198,7 @@ export const LandingScene: React.FC = () => {
             cursor: 'pointer',
             transform: `scale(${buttonScale})`,
             boxShadow: buttonPressed 
-              ? '0 5px 20px rgba(0, 102, 204, 0.4)'
+              ? '0 5px 15px rgba(0, 102, 204, 0.4)'
               : '0 10px 30px rgba(0, 102, 204, 0.2)',
           }}
         >
@@ -221,6 +227,9 @@ export const LandingScene: React.FC = () => {
           </div>
         ))}
       </div>
+
+      {/* Bottom Navigation */}
+      <BottomNav activeTab="search" />
     </AbsoluteFill>
   );
 };
